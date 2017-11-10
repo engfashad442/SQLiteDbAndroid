@@ -1,0 +1,181 @@
+package com.example.shuaibfawole.whereitssnap;
+
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.content.res.Configuration;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+public class MainActivity extends AppCompatActivity {
+    //Making reference to the required variables
+   private ListView mNavDrawerList;
+    private DrawerLayout mDrawerLayout;
+    private ArrayAdapter<String> mAdapter;
+    private ActionBarDrawerToggle mActionBarDrawerToggle;
+    private String mActivityTitle;
+    ActionBarDrawerToggle mDrawerTogle;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        //making reference to our listview
+        mNavDrawerList =(ListView) findViewById(R.id.navList);
+        //Making reference to the drawerlayout
+        mDrawerLayout  =(DrawerLayout) findViewById(R.id.drawLayout);
+        mActivityTitle =getTitle().toString();
+        //Intialized our array from our string we created in the value -string
+        String [] navMenuTitle = getResources().getStringArray(R.array.nav_drawer_items);
+        //intializing our arrayadpater
+        mAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,navMenuTitle);
+        //setup adapter for the listview
+        mNavDrawerList.setAdapter(mAdapter);
+        setupDrawer();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        mNavDrawerList.setOnItemClickListener(
+                new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        switchFragment(position);
+                    }
+                }
+        );
+        switchFragment(0);
+
+
+
+       FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+
+
+    }
+    //Adding method which will help us in switching from one fragment to another when the user taps on the navigation UI
+    public  void switchFragment(int position){
+        //the two variable declare below are used to navigate depending on the option user as selected
+        Fragment fragment = null;
+        String fragmentID = " ";
+        switch (position){
+            case 0:
+                fragmentID ="TITLE";
+                Bundle args = new Bundle();
+                args.putString("Tag","_NO_TAG");
+                fragment = new TitleFragment();
+                fragment.setArguments(args);
+            case 1:
+                fragmentID = "TAGS";
+                fragment = new TagsFragment();
+                break;
+            case 2:
+                fragmentID ="CAPTURE";
+                fragment = new CaptureFragment();
+                break;
+            default:
+                break;
+        }
+       FragmentManager fragmentManager = getFragmentManager() ;
+        fragmentManager.beginTransaction().replace(R.id.fragmentHolder,fragment,fragmentID).commit();
+        //closing the drawer
+        mDrawerLayout.closeDrawer(mNavDrawerList);
+
+    }
+    //setting up the drawer
+    private  void setupDrawer(){
+         mDrawerTogle = new ActionBarDrawerToggle
+                (this ,mDrawerLayout,R.string.drawer_open,R.string.drawer_close){
+            //This method will be called when the drawer is opened
+            public void  onDrawerOpened(View drawerview ){
+                super.onDrawerOpened(drawerview);
+                getSupportActionBar().setTitle("Make Selection");
+                invalidateOptionsMenu();
+            }
+            //This method will be called when drawer is closed
+            public  void onDrawerClosed(View view){
+              super.onDrawerClosed(view);
+                getSupportActionBar().setTitle(mActivityTitle);
+                invalidateOptionsMenu();
+            }
+        };
+        mDrawerTogle.setDrawerIndicatorEnabled(true);
+        mDrawerLayout.setDrawerListener(mDrawerTogle);
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    //This method will be called after on create method
+    //The two methods are used to keep the setting perfect when their is change in the setting such as rotation or
+    //when the app is being minimized , the app can still remember the state of the drawer
+  @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+    }
+ //This method will be called After configuration
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+         mDrawerTogle.syncState();
+    }
+ //This method will be called when the back button on action bar is being pressed
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        //this condition is checking whether the drawer is open or closed
+        if(mDrawerLayout.isDrawerOpen(GravityCompat.START)){
+            mDrawerLayout.closeDrawer(mNavDrawerList);
+        }else{
+            //Go back to title fragment
+            //close if you are already on title fragment
+            Fragment f = getFragmentManager().findFragmentById(R.id.fragmentHolder);
+            if(f instanceof  TitleFragment){
+                finish();
+                System.exit(0);
+            }else {
+                switchFragment(0);
+            }
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+
+        if (id == R.id.action_settings) {
+            return true;
+        }
+        //Activate the navigation drawer toggle
+        if(mDrawerTogle.onOptionsItemSelected(item)){
+             return  true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+}
